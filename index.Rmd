@@ -1,5 +1,5 @@
 ---
-title: "Montreal Social Deprivation Index"
+title: "Montreal Deprivation Index"
 output:
   flexdashboard::flex_dashboard:
     orientation: rows
@@ -57,23 +57,25 @@ if(file.exists("AD_2016.RDS")){
 # Look at Montreal Only,convert to meters
 ad<-ad%>%st_transform(32188)
 mtl_bb<-mtl_bb%>%st_transform(32188)
+mtl_bbox<-mtl_bb%>%st_bbox()%>%st_as_sfc()
 
 # simplify ?
-#ad_<-ad%>%st_simplify(dTolerance=100)
-#ad_mtl<-ad%>%st_intersection(mtl_bb)
+ad<-ad%>%st_simplify(dTolerance=10)
+# take a bounding box and extend by 10km
+ad<-ad%>%st_intersection(mtl_bbox%>%st_buffer(10000))
 ```
 
-# MSDI
+# Social Deprivation Index
 
-## {data-height=900}
+## {data-height=950}
 
-### {data-width=900}
+### {data-width=1000}
 
 
-```{r map, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+```{r map_soc, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
 m<-tm_shape(ad,bbox=extent(mtl_bb)) + 
    tm_borders(alpha=0.2, col='black')+
-   tm_fill(col="CentSoc",alpha=0.7,palette="RdBu",style='quantile')+
+   tm_fill(col="CentSoc",alpha=0.6,palette="RdBu",style='quantile')+
    tm_scale_bar(position=c("right", "bottom"))+
    tm_layout(scale=1)
 
@@ -81,6 +83,33 @@ m<-tm_shape(ad,bbox=extent(mtl_bb)) +
 tmap_leaflet(m)
 ```
 
-## {data-height=100}
+## {data-height=50}
 
-Based on https://www.donneesquebec.ca/recherche/dataset/indice-de-defavorisation-du-quebec-2016
+Gamache, P., Hamel, D., et Blaser, C. (2019) Material and social deprivation index: A summary INSPQ Website.
+http://www.inspq.qc.ca/en/publications/2639
+
+Data: https://www.donneesquebec.ca/recherche/dataset/indice-de-defavorisation-du-quebec-2016
+
+# Material Deprivation Index
+
+## {data-height=950}
+
+### {data-width=1000}
+
+```{r map_mat, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+m<-tm_shape(ad,bbox=extent(mtl_bb)) + 
+   tm_borders(alpha=0.2, col='black')+
+   tm_fill(col="CentMat",alpha=0.6,palette="RdBu",style='quantile')+
+   tm_scale_bar(position=c("right", "bottom"))+
+   tm_layout(scale=1)
+
+# convert to interactive leaflet map
+tmap_leaflet(m)
+```
+
+## {data-height=50}
+
+Gamache, P., Hamel, D., et Blaser, C. (2019) Material and social deprivation index: A summary INSPQ Website.
+http://www.inspq.qc.ca/en/publications/2639
+
+Data: https://www.donneesquebec.ca/recherche/dataset/indice-de-defavorisation-du-quebec-2016
