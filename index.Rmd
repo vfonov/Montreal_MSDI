@@ -1,0 +1,86 @@
+---
+title: "Montreal Social Deprivation Index"
+output:
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+    self_contained: False
+    dev: svg
+---
+```{r setup,include=FALSE,eval=TRUE, echo=FALSE, message=FALSE,warning=FALSE, cache=FALSE}
+#knitr::opts_chunk$set(cache=TRUE, autodep=TRUE)
+#knitr::opts_chunk$set(warning=FALSE, message=FALSE)
+library(flexdashboard)
+library(tidyverse)
+library(sf)
+library(tmap)
+library(tmaptools)
+library(leaflet)
+library(raster)
+library(geojsonsf)
+library(osmdata)
+
+# working with time
+library(lubridate)
+theme_set(theme_bw(base_size = 10, base_family = "Arial")+
+  theme(
+        axis.text   = element_text(vjust = 0.2, size = 10),
+        axis.title = element_text(face = 'bold', vjust = 0.2, size = 10),
+        plot.title = element_text(face = 'bold', vjust = 2.0, size = 12),
+        strip.text = element_text(face = 'bold', size = 10),
+        plot.margin = unit(c(1.0,0.2,0.2,0.2), "cm"),
+        legend.position='bottom'
+    ))
+
+
+```
+```{r prepare, eval=TRUE, echo=FALSE, message=FALSE,warning=FALSE, include=FALSE}
+
+# cache montreal bounding box
+if(file.exists("montreal_bb.RDS")) {
+  mtl_bb <-readRDS(file="montreal_bb.RDS")
+} else {
+  mtl_bb <- getbb('Montreal', format_out='sf_polygon')
+  saveRDS(mtl_bb, file = "montreal_bb.RDS")
+}
+
+# download RAW data from https://www.donneesquebec.ca/recherche/dataset/indice-de-defavorisation-du-quebec-2016
+
+if(file.exists("AD_2016.RDS")){
+  ad<-readRDS(file="AD_2016.RDS")
+} else {
+# take only subways 
+  ad<-st_read('raw/AD_2016_IndDef.shp')
+  saveRDS(ad, file = "AD_2016.RDS")
+}
+
+# Look at Montreal Only,convert to meters
+ad<-ad%>%st_transform(32188)
+mtl_bb<-mtl_bb%>%st_transform(32188)
+
+# simplify ?
+#ad_<-ad%>%st_simplify(dTolerance=100)
+#ad_mtl<-ad%>%st_intersection(mtl_bb)
+```
+
+# MSDI
+
+## {data-height=900}
+
+### {data-width=900}
+
+
+```{r map, eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+m<-tm_shape(ad,bbox=extent(mtl_bb)) + 
+   tm_borders(alpha=0.2, col='black')+
+   tm_fill(col="CentSoc",alpha=0.7,palette="RdBu",style='quantile')+
+   tm_scale_bar(position=c("right", "bottom"))+
+   tm_layout(scale=1)
+
+# convert to interactive leaflet map
+tmap_leaflet(m)
+```
+
+## {data-height=100}
+
+Based on https://www.donneesquebec.ca/recherche/dataset/indice-de-defavorisation-du-quebec-2016

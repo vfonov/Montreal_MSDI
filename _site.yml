@@ -1,0 +1,4 @@
+name: "MSDI"
+exclude: ["*"]
+include: ["index_files"]
+output_dir: "docs"
